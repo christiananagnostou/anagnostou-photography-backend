@@ -13,7 +13,7 @@ module.exports = ({ env }) => {
             host: config.host,
             port: config.port,
             database: config.database,
-            username: config.username,
+            username: config.user,
             password: config.password,
           },
           options: {
@@ -23,6 +23,7 @@ module.exports = ({ env }) => {
       },
     };
   }
+
   return {
     defaultConnection: "default",
     connections: {

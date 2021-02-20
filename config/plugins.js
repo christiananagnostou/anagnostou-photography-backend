@@ -15,5 +15,7 @@ module.exports = ({ env }) => {
     };
   }
 
-  return {};
+  return {
+    //Empty config which will use defaults
+  };
 };
