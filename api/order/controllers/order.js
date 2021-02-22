@@ -1,6 +1,6 @@
 "use strict";
 const { sanitizeEntity } = require("strapi-utils");
-const stripe = require("stripe")(process.env.STRIPE_SK);
+const stripe = require("stripe")(process.env.STRIPE_SK_LIVE);
 
 /**
  * Given a dollar amount, return the amount in cents
