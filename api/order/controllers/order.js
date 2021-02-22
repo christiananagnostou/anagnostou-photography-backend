@@ -1,21 +1,23 @@
 "use strict";
 const { sanitizeEntity } = require("strapi-utils");
+
 const stripe = require("stripe")(process.env.STRIPE_SK_LIVE);
 
 /**
- * Given a dollar amount, return the amount in cents
- * @param {number} number
+ * Given a dollar amount number, convert it to it's value in cents
+ * @param number
  */
 const fromDecimalToInt = (number) => parseInt(number * 100);
+
 /**
- * Read the documentation (https://strapi.io/documentation/developer-docs/latest/concepts/controllers.html#core-controllers)
+ * Read the documentation (https://strapi.io/documentation/v3.x/concepts/controllers.html#core-controllers)
  * to customize this controller
  */
 
 module.exports = {
   /**
-   * Only returns orders that belongs to the logged in user
-   * @param {any} ctx
+   * Only send back orders from you
+   * @param {*} ctx
    */
   async find(ctx) {
     const { user } = ctx.state;
@@ -36,10 +38,8 @@ module.exports = {
       sanitizeEntity(entity, { model: strapi.models.order })
     );
   },
-
   /**
-   * Returns one order, as long as it belongs to the user
-   * @param {any} ctx
+   * Retrieve an order by id, only if it belongs to the user
    */
   async findOne(ctx) {
     const { id } = ctx.params;
@@ -49,28 +49,23 @@ module.exports = {
     return sanitizeEntity(entity, { model: strapi.models.order });
   },
 
-  /**
-   * Creates an order and sets up the Stripe Checkout session for the frontend
-   * @param {any} ctx
-   */
   async create(ctx) {
-    const { product } = ctx.request.body;
+    const BASE_URL = ctx.request.headers.origin || "http://localhost:3000"; //So we can redirect back
 
+    const { product } = ctx.request.body;
     if (!product) {
-      return ctx.throw(400, "Please specify a product");
+      return res.status(400).send({ error: "Please add a product to body" });
     }
 
+    //Retrieve the real product here
     const realProduct = await strapi.services.product.findOne({
       id: product.id,
     });
-
     if (!realProduct) {
-      return ctx.throw(404, "No product with such id");
+      return res.status(404).send({ error: "This product doesn't exist" });
     }
 
-    const { user } = ctx.state;
-
-    const BASE_URL = ctx.request.headers.origin || "http://localhost:3000";
+    const { user } = ctx.state; //From Magic Plugin
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -103,11 +98,6 @@ module.exports = {
 
     return { id: session.id };
   },
-
-  /**
-   * Given a checkout_session, verifies payment and update the order
-   * @param {any} ctx
-   */
   async confirm(ctx) {
     const { checkout_session } = ctx.request.body;
     console.log("checkout_session", checkout_session);
