@@ -18,8 +18,7 @@ module.exports = {
    * @param {any} ctx
    */
   async find(ctx) {
-    const { user } = ctx.state; // this is the Magic user
-
+    const { user } = ctx.state;
     let entities;
     if (ctx.query._q) {
       entities = await strapi.services.order.search({
@@ -75,23 +74,25 @@ module.exports = {
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
-      customer_email: user.email,
-      mode: "payment",
-      success_url: `${BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: BASE_URL,
       line_items: [
         {
           price_data: {
             currency: "usd",
-            product_data: { name: realProduct.name },
+            product_data: {
+              name: realProduct.name,
+            },
             unit_amount: fromDecimalToInt(realProduct.price),
           },
           quantity: 1,
         },
       ],
+      customer_email: user.email, //Automatically added by Magic Link
+      mode: "payment",
+      success_url: `${BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: BASE_URL,
     });
 
-    // Create the order
+    //TODO Create Temp Order here
     const newOrder = await strapi.services.order.create({
       user: user.id,
       product: realProduct.id,
@@ -109,20 +110,26 @@ module.exports = {
    */
   async confirm(ctx) {
     const { checkout_session } = ctx.request.body;
-
+    console.log("checkout_session", checkout_session);
     const session = await stripe.checkout.sessions.retrieve(checkout_session);
+    console.log("verify session", session);
 
     if (session.payment_status === "paid") {
-      const updateOrder = await strapi.services.order.update(
-        { checkout_session },
-        { status: "paid" }
+      //Update order
+      const newOrder = await strapi.services.order.update(
+        {
+          checkout_session,
+        },
+        {
+          status: "paid",
+        }
       );
 
-      return sanitizeEntity(updateOrder, { model: strapi.models.order });
+      return newOrder;
     } else {
       ctx.throw(
         400,
-        "There was an issue with the payment, please call support"
+        "It seems like the order wasn't verified, please contact support"
       );
     }
   },
