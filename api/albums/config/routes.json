@@ -18,7 +18,7 @@
     },
     {
       "method": "GET",
-      "path": "/albums/:id",
+      "path": "/albums/:slug",
       "handler": "albums.findOne",
       "config": {
         "policies": []
