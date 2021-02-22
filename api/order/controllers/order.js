@@ -1,7 +1,13 @@
 "use strict";
 const { sanitizeEntity } = require("strapi-utils");
 
-const stripe = require("stripe")(process.env.STRIPE_SK_LIVE);
+let stripe;
+
+if (process.env.NODE_ENV === "production") {
+  stripe = require("stripe")(process.env.STRIPE_SK_LIVE);
+} else {
+  stripe = require("stripe")(process.env.STRIPE_SK_TEST);
+}
 
 /**
  * Given a dollar amount number, convert it to it's value in cents
