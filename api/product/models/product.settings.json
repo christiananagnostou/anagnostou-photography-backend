@@ -39,8 +39,8 @@
       "targetField": "name"
     },
     "orders": {
-      "collection": "order",
-      "via": "product"
+      "via": "product",
+      "collection": "order"
     },
     "album": {
       "via": "products",

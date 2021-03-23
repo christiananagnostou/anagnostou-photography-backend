@@ -75,6 +75,9 @@ module.exports = {
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
+      shipping_address_collection: {
+        allowed_countries: ["US", "CA"],
+      },
       line_items: [
         {
           price_data: {
@@ -113,12 +116,8 @@ module.exports = {
     if (session.payment_status === "paid") {
       //Update order
       const newOrder = await strapi.services.order.update(
-        {
-          checkout_session,
-        },
-        {
-          status: "paid",
-        }
+        { checkout_session },
+        { status: "paid", address: session.shipping }
       );
 
       return newOrder;
